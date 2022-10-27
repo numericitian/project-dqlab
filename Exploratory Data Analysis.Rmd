@@ -1,0 +1,650 @@
+---
+title: "Exploratory Data Analysis"
+author: "Nurul Fadilah Syahrul"
+date: "August 5, 2020"
+output: 
+  html_document:
+    df_print: paged
+    highlight: textmate
+    number_sections: yes
+    theme: default
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Review Data Wrangling Part 1
+
+Pada course Data Wrangling Part 1 - kita telah melakukan beberapa tahapan awal data wrangling di R yang mencakup topik berikut:
+
+* Missing Value: Bagaimana kita mengenal missing value atau data kosong atau tidak terisi yang direpresentasikan oleh NA (Not Available) di R. Termasuk pada bab ini, operasi matematika yang tidak menghasilkan angka yang bisa diolah (Not a Number).
+* Struktur data kategori bernama Factor: Melengkapi bab awal - diperkenalkan juga tipe data yang juga banyak dijumpai, yaitu data kategori.
+* Membaca file-file teks dan Excel - file Excel adalah file yang paling banyak ditemui sehari-hari.
+* Melakukan perubahan struktur data seperti merubah nama, menambah dan membuang kolom, dan normalisasi struktur data (pivot) sehingga cocok digunakan lebih lanjut.
+
+#Apa yang dipelajari di Data Wrangling Part 2?
+
+Melanjutkan bagian 1, fokus Data Wrangling Part 2 adalah pembacaan sistem database, data cleansing,  dan data enrichment dengan detail berikut:
+
+* Contoh Dataset "Kotor": Perkenalan contoh dataset master pelanggan yang sengaja dirancang dengan "kotor" atau mengandung isi yang tidak standar - menyerupai kondisi riil yang banyak ditemukan oleh tim DQLab selama terlibat dalam proyek-proyek pengolahan data di Indonesia.
+* Profiling: Bagaimana mengidentifikasi pola dataset kita sebelum tau apa yang perlu dibersihkan atau dirapikan.
+* Membaca Database Relasional: Bagaimana mengakses dari sistem database dengan memperkenalkan objek-objek database dan bahasa SQL (Structured Query Language).
+* Data Cleansing - Standarisasi: Bagaimana melakukan perapian isi berbagai tipe data dengan menggunakan fungsi-fungsi transformasi data.
+* Data Cleansing - Missing Value: Bagaimana mengisi missing value pada kolom numerik.
+* Data Cleansing - Deduplikasi: Menemukan data yang duplikat dan melakukan grouping terhadap data-data tersebut.
+* Data Enrichment: Bagaimana melengkapi data kosong dengan melakukan lookup dari internal data.
+
+Walaupun cukup padat materinya, seperti biasa DQLab akan memecah topik-topik ini ke bab-bab yang cukup ringkas dan setahap demi setahap sehingga mudah diikuti.
+
+Dua bab pertama akan berisi teori dan pengenalan dataset, setelah itu bab berikutnya akan penuh praktek latihan.
+
+#Perkenalan Dataset
+
+Sepanjang course ini, kita akan bekerja dengan dataset pelanggan (customer) yang kotor dalam dua format:
+
+* File Excel bernama **xlsx**. File ini dapat didownload pada url https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx.
+* Table **dqlab_pelanggan_messy** di sistem database MySQL – salah satu sistem database open source terpopuler saat ini.
+
+Dataset ini sengaja dirancang agar "kotor" atau semrawut dimana terdapat data dengan format yang berbeda untuk kolom yang sama, data yang hilang, dan kolom dengan lebih dari satu informasi.
+
+Selengkapnya kolom-kolom yang terdapat pada dataset ini adalah sebagai berikut:
+
+* Kode Pelanggan: Merupakan data kode dari tiap pelanggan yang bersifat unik.
+* Nama Lengkap: Nama lengkap dari pelanggan.
+* Alamat: Merupakan data kode dari tiap pelanggan yang bersifat unik.
+* Tanggal Lahir: Merupakan tanggal lahir dari pelanggan.
+* Aktif: Berisi informasi aktif tidaknya pelanggan tersebut saat ini.
+* Kode Pos: Nomor kode pos dari alamat pelanggan.
+* No Telepon: Nomor telepon telepon yang dapat dihubungi.
+* Nilai Belanja Setahun: Nilai total belanja dalam waktu setahun terakhir.
+
+Berikut adalah tampilan sebagian dataset tersebut pada aplikasi Excel.
+
+![](E:/DQLAB/eda1.png)
+
+##Kolom Kode Pelanggan
+
+Kolom kode pelanggan adalah kolom identifikasi – yaitu kolom yang menjadi kunci pembeda antara baris data ini dengan baris data lainnya – di dalam dataset pelanggan.
+
+Kolom identifikasi biasanya memiliki pola yang teratur, untuk dataset kita polanya adalah sebagai berikut.
+
+* Memiliki prefix atau awalan teks yang fix bernilai "**KD-**"
+* Memiliki suffix atau akhiran angka – dengan format lima digit angka.
+* Karena pola yang fix tersebut, panjang total kolom tersebut adalah 8 karakter/digit.
+
+Berikut adalah sebagian contoh data kode pelanggan.
+
+![](E:/DQLAB/eda2.png)
+
+Namun pada baris tertentu ada pola yang tidak sesuai, dimana jumlah angka digit di belakang "KD-" hanya empat seperti terlihat pada screenshot berikut.
+
+![](E:/DQLAB/eda3.png)
+
+Dengan demikian, ada permasalahan inkonsistensi pola dengan panjang yang berbeda.
+
+##Kolom Nama Lengkap
+
+Kolom Nama Lengkap adalah kolom kedua pada dataset dengan sebagian tampilan isinya adalah sebagai berikut.
+
+![](E:/DQLAB/eda4.png)
+
+Disini terlihat ada contoh penulisan panggilan untuk data "Ibu Heidi Goh". Ini pada sebagian perusahaan tidak menjadi masalah, namun untuk industri perbankan yang mengharuskan standarisasi nama berdasarkan regulasi OJK (Otoritas Jasa Keuangan) – maka nama panggilan Ibu ini harus dihilangkan.
+
+Kemudian terdapat spasi berlebih pada data dengan nama "Ir. Ita    Nugraha". Ini tentunya tidak standar secara umum.
+
+Akan ada banyak permasalahan lain pada penulisan nama lengkap ini. Kita akan melakukan identifikasi lebih lanjut pada bab profiling.
+
+##Kolom Tanggal Lahir
+
+Kolom Tanggal Lahir adalah kolom penting lainnya yang biasanya dipasangkan dengan nama untuk identifikasi individu. Sebagian tampilan isinya adalah sebagai berikut.
+
+![](E:/DQLAB/eda5.png)
+
+Disini sudah langsung terlihat masalahnya, yaitu ada beberapa pola yang penulisannya berbeda. Ada yang memiliki pemisah tanda minus (-) dan garis miring (/) dan penulisan nama bulan dan bukan angka pada sebagian data.
+
+##Data Pelanggan yang Duplikat
+
+Selain isi data yang tidak standar, ternyata dataset ini juga memiliki duplikat untuk pelanggan yang sama.
+
+Selain itu ada tahun lahir pelanggan di 1879. Walaupun secara isi, data tersebut bisa dianggap tanggal yang valid. Namun secara bisnis, data tanggal lahir ini mungkin tidak logis dan butuh perbaiki.
+
+Penulisan seperti ini sudah pasti perlu distandarisasi dan diperbaiki agar dapat diolah lebih lanjut untuk analisa.
+
+![](E:/DQLAB/eda6.png)
+
+Terlihat tiga baris data dengan nama Agus Cahyono ini sebenarnya sama terlihat dari isi data Nama Lengkap, Alamat dan Tanggal Lahir. Hanya saja format penulisan semuanya berbeda.
+
+Ini akan memiliki konsekusensi atau impact besar terhadap bisnis. Jika setiap pelanggan ini telah memiliki transaksi, maka kode-kode pelanggannya akan berbeda semua. Dan pada saat analisa data, maka seluruh data transaksi tersebut akan terpisah tiga dan nilai total tidak pernah didapatkan.
+
+Dengan demikian, seluruh laporan transaksi untuk seorang Agus Cahyono akan lebih rendah dari seharusnya.
+
+Dan jika ada program loyalty yang harusnya menyasar pelanggan dengan jumlah transaksi tertentu sebagai bentuk apresiasi dan menjual lebih, maka Agus Cahyono kemungkinan tidak akan terkena reach dan lost opportunity (kehilangan kesempatan) bagi bisnis.
+
+Dengan demikian, akurasi laporan akan sangat rendah dan bisnis bisa mengambil keputusan yang salah.
+
+Ini tentunya adalah tantangan besar dari sisi komputasi yang akan coba kita pecahkan dengan framework dan pengalaman dari DQLab pada enam bab ke depan.
+
+##Membaca dan review isi data file pelanggan
+
+Dataset pelanggan berupa file Excel ini dapat dibaca dengan function read.xlsx seperti telah diperkenalkan pada course "Introduction to R", "Data Visualization with GGPlot2", dan "Data Wrangling Part 1".
+
+```{r}
+library(openxlsx)
+library(bpa)
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx",
+                            sheet="Pelanggan")
+
+#Menampilkan variable data.pelanggan
+data.pelanggan
+
+```
+
+Terlihat ada 155 baris data dengan kolom-kolom data seperti yang telah dijelaskan sejauh ini.
+
+##Profil sederhana dataset dengan function str
+
+Pembacaan dataset secara keseluruhan biasanya tidak selalu diperlukan. Kita lebih banyak kepentingan melihat ringkasan informasi dari data tersebut, misalkan berapa jumlah baris data yang ada.
+
+Dan function str cukup untuk memenuhi kepentingan tersebut. Disiplinkan diri untuk selalu menggunakan function str ini pada saat mengolah data dengan R.
+
+```{r}
+#Menampilkan struktur variable data.pelanggan
+str(data.pelanggan)
+```
+
+##Kesimpulan
+
+Sepanjang course ini, kita akan banyak bekerja dengan data cleansing dan memerlukan contoh dataset yang komprehensif.
+
+DQLab membuat dataset pelanggan yang cukup berantakan. Beberapa permasalahan sudah terlihat dari screenshot dan deskripsi yang diberikan pada bab ini. Walaupun yang dibahas adalah kolom Kode Pelanggan, Nama Lengkap dan Tanggal Lahir dan duplikat data, namun kolom lainnya juga tidak terhindar dari masalah yang memerlukan data cleansing.
+
+Permasalahan data seperti ini hampir sulit dihindari, walaupun sudah dicoba dengan pengembangan sistem entri yang baik – karena dari pengalaman kami dinamika bisnis lebih cepat dibandingkan dinamika pengembangan sistem entri terkomputerisasi.
+
+Selain itu, menyangkut data pelanggan – ini biasanya perlu integrasi dari beberapa sistem seperti ERP (Enterprise Resource Planning), core banking, CRM (Customer Relationship Management) yang kemungkinan besar memiliki standar penulisan yang berbeda.
+
+#Apa itu Data Profiling?
+
+Data profiling adalah tahap awal untuk melakukan data cleansing. Di dalam proses ini melakukan aktifitas yang sederhana tapi penting:
+
+* Kita akan mengidentifikasi pola-pola yang terdapat pada suatu kolom data.
+* Dan membandingkannya dengan ekspektasi atau ukuran scientific yang wajar, untuk menemukan data yang perlu diperbaiki.
+
+Teknik profiling bisa dilakukan dengan banyak cara, namun yang pasti secara umum akan menelusuri keseluruhan data.
+
+Karena pola bisa banyak macam, kita akan memfokuskan profiling pada isi data dengan pola teks sederhana namun cukup efektif.
+
+Agar dapat dipraktekkan dengan riil, secara spesifik kita akan menggunakan function dan operator berikut sepanjang bab ini.
+
+* Function summary dari paket bawaan R.
+* Function basic_pattern_analysis dari library bpa di R.
+* Menggunakan operator == dan function grepl untuk menarik data untuk pola hasil temuan.
+
+##Menggunakan function summary
+
+Jika pada Data Wrangling part 1 kita menggunakan function str untuk melihat struktur dan isi data, pada bab ini kita memperkenalkan function lain yaitu **summary**.
+
+Function **summary** adalah function yang akan memberikan ringkasan singkat data dengan menganalisa isi data.
+
+Penggunaan function summary cukup sederhana, cukup satu objek yang ingin dianalisa.
+
+summary(objek)
+
+Berbeda dengan output str, output dari summary ini akan berbeda untuk tiap tipe dari objek.
+
+* Untuk tipe data numerik, maka summary akan memberikan nilai minimum, maksimum, median, mean, dan lain-lain.
+* Untuk tipe data character akan melaporkan tipe data dan panjang saja.
+* Untuk tipe data factor akan berisi mengenai nilai-nilai factor dan jumlah kemunculan data tersebut (frekuensi).
+
+Untuk lebih jelasnya mari kita coba jalankan tugas praktek berikut.
+
+```{r}
+#Menggunakan function summary
+summary(data.pelanggan)
+```
+
+##Konversi factor dan hasil summary untuk kolom Aktif
+
+Output summary sejauh ini tidak menceritakan banyak hal mengenai kondisi data kita, seluruhnya dibaca sebagai character dan tambahan informasi hanya length.
+
+Kembali ke "Data Wrangling with R – Part 1", factor adalah tipe data yang dapat membantu. Pada praktek kali ini kita coba konversi kolom Aktif menjadi factor dan kita jalankan kembali fungsi summary.
+
+```{r}
+#Mengubah data.pelanggan$Aktif menjadi factor
+data.pelanggan$Aktif <- as.factor(data.pelanggan$Aktif)
+#Menggunakan function summary
+summary(data.pelanggan)
+```
+
+Hasil konversi di atas merupakan daftar nilai dan jumlah frekuensi dari nilai tersebut. Dari hasil terlihat terdapat tanda minus (-) sebanyak 1 data, 0 sebanyak 23 data, 1 sebanyak 98 data, FALSE sebanyak 13 data, huruf I sebanyak 1 data, huruf O sebanyak 1 data, dan nilai TRUE sebanyak 17 data.
+
+##Summary untuk factor kolom lain
+
+Pada praktek kali ini – dengan summary factor yang lebih bisa menceritakan kondisi data – kita akan melakukan konversi sisa kolom character lain ke dalam factor.
+
+```{r}
+#Merubah kolom data selain Nilai.Belanja.Setahun menjadi factor
+data.pelanggan$Kode.Pelanggan <- as.factor(data.pelanggan$Kode.Pelanggan)
+data.pelanggan$Nama.Lengkap <- as.factor(data.pelanggan$Nama.Lengkap)
+data.pelanggan$Alamat <- as.factor(data.pelanggan$Alamat)
+data.pelanggan$Tanggal.Lahir <- as.factor(data.pelanggan$Tanggal.Lahir)
+data.pelanggan$Aktif <- as.factor(data.pelanggan$Aktif)
+data.pelanggan$Kode.Pos <- as.factor(data.pelanggan$Kode.Pos)
+data.pelanggan$No.Telepon <- as.factor(data.pelanggan$No.Telepon)
+
+#Menggunakan function summary
+summary(data.pelanggan) 
+```
+
+Terlihat semua kolom sekarang diolah sebagai factor dengan tampilan summary nilai dan frekuensi sehingga lebih jelas distribusi nilanya. Coba perhatikan untuk kolom Tanggal.Lahir, terlihat sekali ada penulisan nilai yang berbeda dengan jumlah kemunculan nilainya.
+
+##Menggunakan library 'bpa'
+
+Profiling dengan function summary terlihat cukup berguna untuk mengidentifikasi data numerik dan sebaran nilai di factor.
+
+Namun untuk mengidentifikasi pola teks yang benar seperti keharusan prefix dua alfabet, diikuti tanda – dan terakhir dengan 5 angka digit pada kolom Kode Pelanggan, summary tidak dapat mengeluarkan hal tersebut.
+
+Untuk menganalisa pola seperti ini kita dapat menggunakan library bpa (Basic Pattern Analysis).
+
+##Menggunakan function basic_pattern_analysis
+
+Function untuk mengidentifikasi pola yang akan kita gunakan adalah basic_pattern_analysis dengan syntax yang akan kita gunakan sebagai berikut.
+
+```
+basic_pattern_analysis(x= objek)
+```
+
+Dimana x adalah berupa objek angka, character, vector angka, vector character atau data frame. Untuk kasus kita, maka x adalah variable dari hasil pembacaan dataset pelanggan.
+
+Output dari function ini adalah pengenalan karakter per karakter menjadi simbol berikut:
+
+* Tiap huruf besar A s/d Z akan direpresentasikan oleh huruf A.
+* Tiap huruf kecil a s/d z akan direpresentasikan oleh huruf a.
+* Tiap angka 0 s/d 9 akan direpresentasikan oleh angka 9.
+* Spasi dan tab akan direpresentasikan oleh huruf w.
+* Semua simbol akan direpresentasikan oleh dirinya sendiri. Contoh: tanda minus (-) akan tetap direpresentasikan dengan tanda minus (-).
+* Missing value NA akan direpresentasikan oleh NA.
+* NaN (Not a Number) akan direpresentasikan sebagai "AaA".
+
+Sebagai contoh, jika kita identifikasi pola teks "DQLab" dengan fungsi basic_pattern_analysis sebagai berikut:
+
+```
+basic_pattern_analysis(x="DQLab")
+```
+
+akan menghasilkan output sebagai berikut:
+
+```
+[1] "AAAaa"
+```
+
+Dimana [1] adalah tampilan index, sedangkan teks "AAAaa" adalah identifikasi pola tiga huruf besar diikuti dua huruf kecil.
+
+Contoh lain, jika kita masukkan
+
+```
+basic_pattern_analysis(x="17 Agustus 1945")
+```
+
+akan menghasilkan output sebagai berikut:
+
+```
+[1] "99wAaaaaaaw9999"
+```
+
+Dimana [1] adalah tampilan index, sedangkan teks "99wAaaaaaaw9999" adalah identifikasi pola dua angka, satu spasi, satu huruf besar, enam huruf kecil, satu spasi, dan empat angka.
+
+```{r}
+#Menggunakan function basic_pattern_analysis
+basic_pattern_analysis(x = "DQLab")
+basic_pattern_analysis(x = "17 Agustus 1945")
+basic_pattern_analysis(x = 3.14)
+```
+
+##Profiling terhadap vector
+
+Selain satu teks, function basic_pattern_analysis juga bisa digunakan untuk vector seperti pada contoh berikut.
+
+```
+basic_pattern_analysis(c("KD-001", "DQLab", "KD-002"))
+```
+
+Parameter x pada praktek sebelumnya tidak perlu dimasukkan lagi dalam hal ini. Dan output dari perintah di atas adalah sesuai urutan vector seperti berikut.
+
+```
+[1] "AA-999" "AAAaa" "AA-999"
+```
+
+Terlihat teks pertama dan ketiga polanya sama, sedangkan teks kedua berbeda sendiri.
+
+```{r}
+#Menggunakan function basic_pattern_analysis
+basic_pattern_analysis(c("KD-008", "012345", "KD-010"))
+```
+
+##Menggunakan Parameter unique_only=TRUE
+
+Kembali pada contoh pada lesson sebelumnya sebagai berikut.
+
+```
+basic_pattern_analysis(c("KD-001", "DQLab", "KD-002"))
+```
+
+Yang menghasilkan output berikut.
+
+```
+[1] "AA-999" "AAAaa" "AA-999"
+```
+
+Dimana terdapat dua pola yang sama. Tampilan pola dengan data satu per satu seperti ini masih bisa kita identifikasi karena kebetulan cuma tiga data.
+
+Bagaimana jika datanya berjumlah puluhan bahkan ribuan? Tentunya akan lebih sulit proses identifikasinya mana pola yang sama atau berulang. Akan lebih bagus jika ada ringkasan informasi seperti summary di atas […]
+
+Beruntung function ini juga memiliki parameter **unique_only** yang jika diberikan nilai **TRUE** akan memberikan pola yang unik saja dan jumlah dari masing-masing pola yang teridentifikasi.
+
+Contoh pengunaannya dengan modifikasi perintah di atas jadinya adalah sebagai berikut:
+
+```
+basic_pattern_analysis(c("KD-001", "DQLab", "KD-002"), unique_only=TRUE)
+```
+
+Kali ini perintahnya akan menghasilkan output sebagai berikut.
+
+```
+AA-999  AAAaa      2      1
+```
+
+Dengan pola yang teridentifikasi adalah sebagai berikut:
+
+* AA-999 muncul sebanyak 2 kali.
+* AAAaa muncul sebanyak 1 kali.
+
+Dengan informasi dari frekuensi ini, kita bisa mengidentifikasi distribusi pola yang tidak umum atau anomali.
+
+```{r}
+#Menggunakan function basic_pattern_analysis
+basic_pattern_analysis(c("KD-008", "012345", "KD-010"), unique_only = TRUE)
+```
+
+##Profiling terhadap kolom Kode Pelanggan
+
+Pada bab pengenalan dataset, telah diinformasikan bahwa kolom Kode Pelanggan memiliki pola yang berbeda – atau pola tidak standar atau anomali yang harus diperbaiki.
+
+Pertanyaannya, bagaimana kita mencarinya dan berapa banyak jumlah anomali ini?
+
+Jawabannya adalah dengan function basic_pattern_analysis yang telah kita gunakan di dua praktek sebelum ini, namun kali ini kita menggunakan input berupa kolom Kode.Pelanggan dari data.frame.
+
+Berikut adalah contoh penggunaannya:
+
+```
+basic_pattern_analysis(data.pelanggan$Kode.Pelanggan, unique_only = TRUE)
+```
+
+dimana:
+
+* pelanggan adalah variabel bertipe data.frame dari hasil pembacaan file pelanggan.
+* pelanggan$Kode.Pelanggan adalah kolom Kode.Pelanggan dari variable data.pelanggan.
+unique_only = TRUE adalah parameter.
+
+```{r}
+#Menggunakan function basic_pattern_analysis pada kolom Kode.Pelanggan
+basic_pattern_analysis(data.pelanggan$Kode.Pelanggan, unique_only = TRUE)
+```
+
+Terlihat ada dua pola yang teridentifikasi yaitu "AA-9999" dengan jumlah data hanya 1, dan pola "AA-99999" dengan jumlah sebanyak 154 data.
+
+Dengan melihat fungsi kolom Kode Pelanggan yang merupakan kolom identifikasi dan harusnya memiliki pola yang konsisten, satu diantara 154 data ini tentunya adalah anomali atau outlier.
+
+##Filter Data dengan pola anomali
+
+Pada praktek "Profiling terhadap kolom Kode Pelanggan", kita telah mendapatkan pola anomali yaitu "AA-9999". Tahap berikutnya adalah bagaimana mengambil porsi dari dataset pelanggan dengan pola ini.
+
+Ada dua proses, yaitu pertama membandingkan seluruh pola dengan teks anomali menggunakan operator == (tanda sama dengan ganda).
+
+Bentuk penggunaannya sebagai berikut.
+
+```
+basic_pattern_analysis(data.pelanggan$Kode.Pelanggan)=="AA-9999"
+```
+
+Perintah ini akan menghasilkan daftar nilai TRUE/FALSE – dimana hasil akan TRUE jika operator == menemukan teks yang sama, FALSE jika sebaliknya – sebagai berikut.
+
+```
+ [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[13] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[25] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[37] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[49] FALSE FALSE TRUE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[61] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[73] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[85] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[97] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[109] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[121] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[133] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+[145] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE 
+```
+
+Terlihat hanya ada satu nilai **TRUE** dari seluruh data yang ditelusuri oleh operator ==
+
+Proses selanjutnya adalah menggunakan daftar nilai TRUE/FALSE ini untuk melakukan filter dengan konstruksi berikut.
+
+data.pelanggan[**daftar_nilai_true**, ]
+
+dimana data.pelanggan diikuti dengan indeks hasil scan diikuti tanda koma (,). Sehingga konstruksi selengkapnya ditulis sebagai berikut.
+
+data.pelanggan[ **basic_pattern_analysis(data.pelanggan$Kode.Pelanggan)=="AA-9999"** , ]
+
+```{r}
+#Mengambil dataset yang memiliki pola teks "AA-9999" di kolom Kode.Pelanggan
+data.pelanggan[ basic_pattern_analysis(data.pelanggan$Kode.Pelanggan)=="AA-9999" , ]
+```
+
+##Profiling terhadap kolom Nama
+
+Melanjutkan profiling kita, praktek kali ini kita akan memfokuskan diri pada kolom **Nama.Lengkap** dengan masih menggunakan function yang sama.
+
+Nah, pada praktek kali ini kita juga akan memberikan satu tip, disini kita akan mengambil kolom tersebut bukan dengan mencantumkan **Nama.Lengkap**, tapi dengan **Nama** saja.
+
+Ini memungkinkan karena kolom dengan awalan **Nama** hanya ada satu. Sebagai perbandingan, kalau mencamtumkan **Kode** tidak akan bisa karena awalan Kode ada di dua kolom, yaitu **Kode.Pelanggan** dan **Kode.Pos**.
+
+```{r}
+#Menggunakan function basic_pattern_analysis pada kolom Nama
+basic_pattern_analysis(data.pelanggan$Nama, unique_only = TRUE)
+```
+
+Terlihat ada pola nama yang mengandung 9. Ini artinya pada nama tersebut mengandung angka, sesuatu yang tidak lazim.
+
+##Perkenalan function grepl
+
+Teknik filtering dengan menggunakan operator == hanya dapat digunakan untuk mengenal teks yang spesifik dan sama persis. Sebagai contoh kita ingin mencari pola "AA-9999".
+
+Jika ingin mencari teks yang mengandung karakter tertentu di dalamnya,  seperti pada kasus profiling **Nama -** kita ingin mencari teks yang mengandung karakter tapi bukan huruf. Ini tentunya akan banyak pola yang bisa terjadi, misalkan "Aaaaaaaa", "AaaaaawAA", dan lain-lain.
+
+Jika dilakukan demikian, bentuk filteringnya adalah daftar teks yang akan panjang sekali dan belum tentu benar. Kita tidak menginginkan hal tersebut, tapi kita ingin kepastian akan satu mekanisme filtering yang pasti benar dan tidak merepotkan?
+
+Untuk hal ini perlu penyaringan menggunakan konstruksi bernama **regular expression (regex)** dan diimplementasikan di R dengan function bernama **grepl**.
+
+Function **grepl** digunakan untuk menyaring suatu data berdasarkan pola regex. Regex adalah suatu bahasa yang sangat lengkap untuk mendeteksi pola teks yang beragam.
+
+Regex juga sangat kompleks, dan agar menjaga fokus di course ini maka kita tidak akan membahas regex secara mendalam. Tapi sebagai gantinya, akan diberikan penjelasan apa yang dilakukan oleh pola regex yang diberikan sebagai petunjuk untuk melakukan filter.
+
+Penggunaan function grepl adalah sebagai berikut:
+
+```
+grepl(pattern=pola_pattern_regex, x = data)
+```
+
+dimana:
+
+* **pola_pattern_regex**: adalah pola regular expression (regex) yang dapat digunakan untuk filter data.
+* **data**: adalah data berupa teks atau vector dari character.
+
+Hasil output dari grepl adalah nilai TRUE jika ada pola yang terdapat di dalam teks / data, sebaliknya FALSE jika tidak ada pola yang terdapat di dalam teks / data.
+
+![](E:/DQLAB/eda7.png)
+
+```{r}
+grepl(pattern="[a]", x="pelanggan")
+grepl(pattern="[^a]", x="pelanggan")
+grepl(pattern="[bc]", x="pelanggan")
+grepl(pattern="[^bc]", x="pelanggan")
+grepl(pattern="[s]", x="pelanggan")
+grepl(pattern="[^s]", x="pelanggan")
+grepl(pattern="aa", x="pelanggan")
+```
+
+##Menemukan nama yang mengandung karakter tidak lazim
+
+Dengan mengenal function grepl pada satu praktek sebelum ini, kita sudah siap untuk melakukan filter terhadap hasil profiling dari kolom Nama - dimana isi yang tidak lazim untuk suatu nama kita perlu temukan.
+
+Langkah pertama, tentunya kita perlu mendefinisikan apa yang disebut tidak lazim?
+
+Secara sederhana kita dapat mengatakan nama tidak lazim bila:
+
+* Mengandung karakter bukan huruf, spasi, titik dan koma.
+* Memiliki spasi lebih dari satu secara berurutan.
+
+Dengan menggunakan simbol pola dari library bpa, maka definisi di atas dapat dimodelkan sebagai berikut dalam regex:
+
+* [^Aaw.,]
+* ww
+
+Dan jika menggunakan grepl, maka konstruksinya adalah sebagai berikut:
+
+* grepl(pattern="[^Aaw.,]", x=basic_pattern_analysis(data.pelanggan$Nama))
+* grepl(pattern="ww", x=basic_pattern_analysis(data.pelanggan$Nama))
+Tugas Praktek
+
+```{r}
+#Menggunakan function grepl untuk mengambil pola nama tidak lazim
+data.pelanggan[grepl(pattern="[^Aaw.,]", x=basic_pattern_analysis(data.pelanggan$Nama)),]
+data.pelanggan[grepl(pattern="ww", x=basic_pattern_analysis(data.pelanggan$Nama)),]
+```
+
+##Profiling terhadap seluruh kolom
+
+Akan lebih tepat jika kita tetap melakukan profiling per tiap kolom. Tapi function **basic_pattern_analysis** juga dapat melakukan untuk seluruh kolom dari data.frame Pelanggan.
+
+Untuk melakukan hal ini, kita gunakan input data.frame langsung di dalam function **basic_pattern_analysis**.
+
+```{r}
+#Profiling pola seluruh kolom
+basic_pattern_analysis(data.pelanggan)
+```
+
+##Menggabungkan hasil profiling ke dalam dataset awal
+
+Data pola yang sudah kita dapatkan di praktek terakhir akan menarik jika digabungkan kembali ke sumber data asal, terutama untuk dua alasan berikut:
+
+* Kita tidak perlu scan berulang-ulang untuk mendapatkan nama dengan pola tertentu, ini akan menghemat resource komputasi terutama jika datanya sangat besar. Cukup memfilter kolom pola terkait.
+* Hasil penggabungan menjadi dataset baru yang bisa kita olah dengan aplikasi lain misalkan Excel atau SQL - dimana kita saat ini lebih terbiasa.
+
+Tiga langkah proses penggabungan ini adalah sebagai berikut:
+
+* Melakukan profiling terhadap seluruh kolom dari variable **data.pelanggan** dan disimpan ke variable baru, pada contoh berikut namanya adalah **pola.data.pelanggan**.
+pola.data.pelanggan <- basic_pattern_analysis(data.pelanggan)
+* Mengganti nama-nama kolom pada variable **pola.data.pelanggan** dengan menambahkan prefix "Pola." dengan perintah berikut.
+names(pola.data.pelanggan)<-paste("Pola",names(pola.data.pelanggan),sep=".")
+* Menggabungkan kedua data.frame data.pelanggan dan pola.data.pelanggan dengan function cbind, dan disimpan kembali ke variable **data.pelanggan**.
+data.pelanggan <- cbind(data.pelanggan, pola.data.pelanggan)
+
+```{r}
+#Melakukan profiling terhadap seluruh kolom data.pelanggan 
+pola.data.pelanggan <- basic_pattern_analysis(data.pelanggan)
+
+#Merubah nama kolom
+names(pola.data.pelanggan)<-paste("Pola",names(pola.data.pelanggan),sep=".")
+
+#Menggabungkan dua data.frame
+data.pelanggan <- cbind(data.pelanggan, pola.data.pelanggan)
+
+#Menampilkan struktur
+str(data.pelanggan)
+```
+
+Dengan hasil perintah str di atas, kita dapat mengambil kesimpulan penggabungan telah berhasil dilakukan dimana kolom-kolom beprefix "Pola" telah digabungkan dan isinya konsisten dengan keluaran function **basic_pattern_analysis**.
+
+##Menuliskan hasil ke dalam file Excel
+
+```{r}
+#Menulis File Excel
+write.xlsx(data.pelanggan, file="data.pelanggan.xlsx")
+```
+
+##Kesimpulan
+
+Data profiling adalah tahap awal untuk melakukan data cleansing. Di dalam proses ini melakukan aktifitas yang sederhana tapi penting:
+
+* Identifikasi berbagai pola yang terdapat pada satu kolom data.
+* Melakukan perbandingan dengan ekspektasi atau ukuran scientific yang wajar, untuk menemukan data yang perlu diperbaiki.
+
+Kedua proses ini telah dipraktekkan dengan sangat detil menggunakan fungsi dan operator berikut:
+
+* Function **summary** dari paket bawaan R.
+* Function **basic_pattern_analysis** dari library bpa di R.
+* Menggunakan operator == dan function **grepl** untuk menarik data untuk pola hasil temuan.
+
+Dengan penguasaan keterampilan profiling ini, Anda bisa mengenal outlier dan mengambil datanya - telah ditunjukkan untuk kolom Kode.Pelanggan dan Nama. Tanpa kemampuan identifikasi dan pengambilan data ini, tentu proses data cleansing atau perbaikan data tidak dapat dilakukan.
+
+Terakhir, kita lakukan penggabungan pola dan data asal menjadi satu dataset dan dituliskan ke file agar bisa dilihat atau dikelola menggunakan aplikasi lain seperti Excel. Pada bab berikutnya, kita akan mulai menggunakan dataset gabungan ini tetapi dibaca dari sistem database MySQL, bukan file lagi.
+
+#SQL dan Sistem Database Relasional
+
+##Pendahuluan
+
+Kemampuan data wrangling tidak terlepas dari kemampuan untuk membaca berbagai sumber data, salah satu yang paling populer adalah membaca sistem database relasional.
+
+Walaupun proses pembelajaran pengolahan data cleansing tidak perlu melibatkan sistem database relasional. Namun karena sedemikian populernya, maka DQLab memutuskan untuk tetap memberikan materi SQL setelah di course sebelumnya kita selalu membaca data dari file teks maupun Excel.
+
+Dengan demikian dari bab ini sampai penutup, kita akan tetap membaca dari sistem database. Namun tetap diingat, sumber data tetap bisa dibaca dari teks file maupun Excel.
+
+Walaupun cukup banyak konsep yang perlu dikenalkan, DQLab akan usahakan untuk memberikan penjelasan yang gamblang dengan menghilangkan banyak detil yang tidak diperlukan.
+
+##Apa itu Sistem Database Relasional?
+
+Ada dua kategori sistem database yang sangat populer saat ini, yaitu:
+
+* Sistem database relasional atau SQL based database: adalah sistem database yang mengusung konsep objek database yang saling berelasi dengan skema dari objek-objek tersebut telah didefinisikan dengan jelas.
+Contoh produk: Microsoft Access, MySQL, Oracle, SQL Server, PostgreSQL, dan lain-lain.
+* NoSQL: adalah sistem database yang mengusung konsep objek database dengan skema yang fleksibel dan tidak kaku seperti relasional.
+Contoh produk: seperti MongoDB, Apache Cassandra, Apache HBase, dan lain-lain.
+
+Sistem database yang pertama atau relasional adalah yang paling banyak digunakan di hampir seluruh perusahaan di Indonesia yang menggunakan sistem informasi komputer.
+
+Sebuah sistem database dirancang untuk melakukan tiga fungsi berikut:
+
+* Menyimpan Data
+* Mengorganisasikan Data
+* dan Mengambil Data
+
+Dan untuk relasional database, kemampuan untuk melakukan tiga hal tersebut bisa menggunakan bahasa khusus yang dinamakan SQL (Structured Query Language). Dengan SQL kita memiliki konstruksi bahasa yang lebih mudah untuk berinteraksi dengan objek-objek data seperti database, table, kolom, dan lain-lain.
+
+Sepanjang course ini kita akan fokus menggunakan SQL untuk fungsi terakhir, yaitu mengambil data. Produk yang akan kita gunakan adalah MySQL - yang bisa dikatakan sebagai produk database open source paling populer.
+
+##Server, Database, Table, Row dan Column
+
+SQL tentunya membutuhkan interaksi dengan objek-objek sistem database dimana isi atau datanya sendiri disimpan.
+
+Disini, DQLab akan mengambil konsep spreadsheet Excel sebagai analogi untuk menjelaskan objek-objek database sebagai berikut:
+
+* Database: adalah satu file spreadsheet Excel yang memiliki banyak sheet.
+* Table: adalah sheet pada Excel. Dengan demikian database terdiri dari beberapa table.
+* Row: Tiap sheet memiliki table data yang memiliki row data.
+* Sedangkan MySQL server adalah analoginya adalah lokasi folder di komputer dimana kita bisa menyimpan banyak file.
+
+Jika dikaitkan ke R, table, kolom, dan baris dapat disamakan dengan data.frame, kolom data.frame, dan isi data.frame.
+
+* Package RMySQL
+
+Untuk dapat berinteraksi dengan sistem database MySQL di dalam R, kita bisa gunakan package RMySQL - yang sudah terinstalasi di server.
+
+Sisa praktek dari bab ini akan diperkenalkan.
+
+* Function-function yang akan digunakan untuk melakukan koneksi dan mengambil data dari database yang disimpan di MySQL server.
+* Perintah SELECT yang merupakan bagian dari SQL untuk mengambil kolom tertentu dan dengan filter isi dengan pola yang dimengerti oleh MySQL.

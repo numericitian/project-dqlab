@@ -1,0 +1,674 @@
+---
+title: "Statistics using R for Data Science"
+author: "Nurul Fadilah Syahrul"
+date: "July 31, 2020"
+output:
+  html_document:
+    df_print: paged
+    highlight: textmate
+    number_sections: yes
+    theme: yeti
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+  word_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Dasar-dasar Statistika
+
+Pada chapter 1 ini, kita akan belajar mengenai 3 poin utama, yaitu:
+
+1. Pengertian Statistik
+2. Jenis-jenis Data
+3. Estimasi Karakteristik
+
+##Pendahuluan
+
+Statistika adalah ilmu yang mempelajari cara pengumpulan data, menganalisis data untuk mendapatkan kesimpulan informasi sampai dapat dijadikan dasar pembuatan kebijakan. Definisi diatas mirip dengan tugas dari seorang Data Science yaitu mulai dari ekplorasi data, modelling untuk mendapatakan pola yang tersembunyi dari data kemudian menemukan Insight untuk dasar kebijakan (data-driven).
+
+Kenapa harus belajar statistik ?
+
+Ilmu Statistik fungsinya untuk mengolah data, yang bisa angka maupun bukan angka. Statistik merupakan pondasi awal sebelum belajar Data Science. Alasannya, banyak tools data science merupakan pengembangan dari teknik statistik, mulai dari sederhana sampai yang rumit.
+
+Agar dapat memahami konsep-konsep tersebut, pada bab ini juga disertakan satu dataset file dengan nama data_intro.csv yang akan dijadikan file praktek di R.
+
+##Statistik sebagai Ilmu Peluang
+
+Sebenarnya statistik merupakan ilmu peluang, yaitu untuk mendapatkan generalisasi populasi dari sampel yang kita miliki. Dalam statistik banyak kaitannya dengan sampel dan populasi, berikut pengertiannya
+
+1. Sampel adalah representasi dari sebagian elemen dari populasi.
+2. Populasi adalah total dari semua elemen.
+
+![](E:/DQLAB/statistik1.png)
+
+Gambar di atas dapat menjelaskan fungsi dari statistik, yaitu kita dapat mengetahui karakteristik dari populasi melalui sampel yang kita miliki.
+
+Kemudian untuk mengukur karakteristik dari sampel dan populasi, dengan melihat nilai statistik dan parameter. Untuk lebih jelasnya dapat dilihat pengertian berikut
+
+Perbedaan antara statistik dan parameter adalah sebagai berikut:
+
+1. Statistik adalah nilai estimasi karateristik populasi.
+2. Parameter adalah nilai karakteristik populasi atau bisa disebut karakteristik sebenarnya.
+
+Statistik lebih banyak dicari nilainya daripada parameter, alasannya adalah lebih menghemat biaya,waktu dan tenaga. Selain itu, pengambilan sampel sebenarnya sudah dapat mewakili populasi.
+
+Dan secara praktis, kita tidak mungkin melakukan pengambilan populasi karena dapat bersifat merusak. Contoh: pengambilan sample dari produksi seluruh bola lampu untuk menguji kandungan di dalamnya. Atau pengambilan seluruh populasi udang dari suatu tambak.
+
+##Data Kuantitatif dan Kualitatif
+
+Kualitatif dan Kuantitatif
+
+1. Kuantitatif adalah data yang dinyatakan dalam bentuk angka
+2. Kualitatif adalah data yang dinyatakan dalam bentuk bukan angka
+
+Selanjutnya bagaimana untuk mendapatkan nilai karakteristik dari data kuantitatif dan kualitatif, jawabanya yaitu kita harus menggolongkan ke dalam skala pengukuran data.
+
+Kenapa harus dilakukan?
+
+Agar data mudah untuk diolah sehingga mendapatkan nilai statistik
+
+##Skala Pengukuran Data
+
+Tiap data perlu suatu standar untuk melakukan pengukuran, ini disebut skala.
+
+Dan berikut adalah jenis-jenis skala pengukuran data:
+
+1. Nominal: adalah skala yang diberikan hanya sebagai label saja, tidak mengandung pengertian tingkatan.
+Contoh: Jika pria = 1 dan wanita = 2, artinya disini 1 dan 2 adalah nominal yang mewakili pria dan wanita. Disini nilai 2 tidak lebih besar dari nilai 1.
+
+2. Ordinal: adalah skala yang mengandung pengertian tingkatan.
+Contoh: Data kepuasan, 1 = tidak puas, 2 = puas, dan 3 = sangat puas, artinya 1 < 2 < 3.
+
+3. Interval: adalah skala yang mempunyai sifat ordinal dan mengandung jarak(interval).
+Misalnya: harga pakaian merk A 100 ribu, harga pakaian merk C 200 ribu, artinya harga pakian merk A dan C memiliki interval 100 ribu
+
+4. Rasio: adalah skala yang mempunyai sifat nominal, ordinal, dan interval, serta mempunyai nilai rasio antar objek yang diukur.
+Contoh: harga pakaian merk A 100 ribu, harga pakaian merk C 200 ribu. Rasio harga pakaian A dengan pakaian C adalah ½. Sehingga dapat dikatakan bahwa harga pakaian A harganya 2 kali pakaian C.
+
+Dari penjelasan diatas dapat kita simpulkan bahwa data kualitatif dapat kita golongkan menjadi skala nominal dan ordinal. Sedangkan untuk data kuantitatif maka digolongkan menjadi interval dan rasio.Skala pengukuran nominal dan ordinal pada R didefinisikan sebagai faktor atau sering disebut data kategorik sedangkan interval dan rasio di definisikan sebagai numerik.
+
+## Dataset Tingkat Kepuasan Pelanggan
+
+Dataset yang akan di pakai dalam course ini adalah data tentang kepuasan konsumen terhadap suatu produk pakaian. Dataset ini ada dalam file bentuk format file CSV dengan nama data_intro.csv. Data ini juga dilengkapi karakteristik umum dari konsumen.
+
+Berikut adalah tampilan dari dataset tersebut jika dibuka dengan aplikasi notepad.
+
+![](E:/DQLAB/statistik2.png)
+
+Terlihat pemisah antar kolomnya menggunakan tanda titik koma. Terdiri dari sembilan kolom dan 20 baris data
+
+Dan berikut adalah tampilan dari dataset tersebut jika dibuka dengan aplikasi spreadsheet.
+
+![](E:/DQLAB/statistik3.png)
+
+Dataset tersebut terdiri dari sembilan kolom dengan detil berikut:
+
+* ID Pelanggan: Kode pelanggan yang sifatnya unik, tidak ada data lain dengan kode yang sama. Kode ini dalam bentuk yang sangat sederhana berupa angka integer (bilangan bulat).
+* Nama: Nama pelanggan dalam bentuk teks
+* Jenis Kelamin: Jenis kelamin dari pelanggan, dalam bentuk angka integer. Disini 1 mewakili laki-laki dan 2 mewakili perempuan.
+* Pendapatan: Nilai pendapatan per bulan dari tiap pelanggan (??).
+* Produk: Produk yang disurvei.
+* Harga: Harga produk yang dibeli.
+* Jumlah: Jumlah produk yang dibeli.
+* Total: Total harga pembelian.
+* Tingkat Kepuasan: Indeks tingkat kepuasan pelanggan tersebut terhadap produk yang dibeli.
+
+Dengan data sederhana ini diharapkan dapat mengasah kempuan analisis statistik. Kemampuan analisis statistik akan terlatih dengan Learning By Doing. Metode belajar ini sangat efektif untuk pemahaman ilmu statistika.
+
+##Membaca Dataset dengan read.csv
+
+Untuk membaca dataset data_intro.csv tersebut kita akan gunakan function read.csv dengan konstruksi berikut:
+
+```{r}
+data_intro <- read.csv("https://academy.dqlab.id/dataset/data_intro.csv",sep=";")
+
+data_intro
+```
+
+Penjelasan terhadap function di atas adalah sebagai berikut:
+
+![](E:/DQLAB/statistik4.png)
+
+##Melihat Tipe Data dengan Str
+
+Adalah praktek yang sangat baik untuk mengenal atau melakukan profile tiap dataset yang sudah dibaca ke dalam R – dan secara sederhana di R dapat kita lakukan dengan function str. Function str akan menyajikan informasi tiap kolom dataset dalam format yang compact – satu baris informasi saja per row. Pendekatan singkat dan jelas ini membuat str menjadi function favorit dan efektif untuk mengenal data di tahap awal.
+
+Syntaxnya juga cukup sederhana, jalankan fungsi berikut:
+
+```{r}
+str(data_intro)
+```
+
+Untuk baris di bawahnya adalah penjelasan dari tiap kolom/variable data yang terdiri dari:
+
+1. Nama kolom
+2. Tipe data kolom
+3. Isi dari kolom tersebut
+4. Jika Factor maka ada tambahan indexnya
+
+Berikut penjelasan hasil dalam bentuk ilustrasi dari 3 kolom, yaitu ID.Pelanggan, Nama, dan Jenis.Kelamin.
+
+![](E:/DQLAB/statistik5.png)
+
+##Mengubah Tipe Data Kolom ID.Pelanggan menjadi Character
+
+Variabel `ID.Pelanggan` merupakan kode unik dari setiap variabel dan tidak bisa dicari nilai statistiknya. Sehingga tipe data `ID.Pelanggan` perlu diubah menjadi character agar tidak ikut di analisis.
+
+Untuk mengubah tipe data `ID.Pelanggan` menjadi character dapat menggunakan syntax:
+
+```{r}
+data_intro$ID.Pelanggan <-as.character(data_intro$ID.Pelanggan)
+
+str(data_intro$ID.Pelanggan)
+```
+
+Untuk melihat apakah sudah berhasil dalam mengubah variabel `ID.Pelanggan`, gunakan function str berikut:
+
+```{r}
+str(data_intro$ID.Pelanggan)
+```
+
+Function as.character mengubah id tiap pelanggan menjadi string/character - ditandai dengan tanda petik diantara kode unik tersebut.
+
+##Mengubah Sejumlah Kolom menjadi Data Kategorik (Factor)
+
+Pada data_intro beberapa variabelnya bersifat kualitatif yaitu variabel `Jenis.Kelamin`, `Produk`, dan `Tingkat.Kepuasan`. Variabel tersebut harus diubah jenis datanya menjadi faktor untuk mendapatkan karakteristik dari setiap pelanggan (observasi).
+
+Untuk mengubah tipe data menjadi factor dapat menggunakan syntax berikut:
+```{r}
+data_intro$Jenis.Kelamin <- as.factor(data_intro$Jenis.Kelamin)
+data_intro$Produk <- as.factor(data_intro$Produk)
+data_intro$Tingkat.Kepuasan <- as.factor(data_intro$Tingkat.Kepuasan)
+```
+
+Untuk melihat apakah sudah berhasil dalam mengubah variabel tersebut, gunakan function str berikut:
+
+```{r}
+str(data_intro$Jenis.Kelamin)
+str(data_intro$Produk)
+str(data_intro$Tingkat.Kepuasan)
+```
+
+##skala Pengukuran Data
+
+Setelah data diubah jenis tipe datanya, selanjutnya adalah pemeriksaan untuk memastikan apakah tipe data setiap variabel sudah sesuai dengan skala pengukuran masing-masing.
+
+Untuk melihat data dan tipe data dapat menggunakan syntax berikut:
+
+```{r}
+data_intro
+str(data_intro)
+```
+
+##Estimasi Karakteristik
+
+Ukuran pemusatan (mean,modus,median, presentil)
+
+1. Modus adalah nilai yang sering muncul dari suatu distribusi (data nominal-data rasio).
+2. Median adalah nilai tengah dari suatu distribusi (data interval dan rasio).
+3. Mean adalah rata-rata aritmatik dari suatu distribusi (data interval dan rasio).
+
+![](E:/DQLAB/statistik6.png)
+
+Contoh
+
+Data : 2, 2, 5, 7, 9, 9, 9, 10, 10, 11, 12
+
+Modus = 9
+
+Median = 9
+
+Mean = 7,81
+
+###Estimasi Nilai Statistik Modus
+
+Modus merupakan nilai yang menunjukan nilai yang sering muncul. Modus digunakan untuk data bertipe nominal dan ordinal.
+
+####modus untuk kolom Produk pada variable data_intro
+
+Untuk melihat nilai modus untuk kolom `Produk` pada variable data_intro, gunakan fungsi berikut:
+
+```{r}
+library(pracma)
+Mode(data_intro$Produk)
+```
+
+####modus untuk kolom Tingkat.Kepuasan
+
+Untuk melihat nilai modus untuk kolom `Tingkat.Kepuasan` pada variable data_intro, gunakan fungsi berikut:
+
+```{r}
+Mode(data_intro$Tingkat.Kepuasan)
+```
+
+Berikut penjelasan function diatas:
+
+1. Mode akan menampilkan nilai terbanyak pada variabel yang diamati.
+2. data_intro$Produk, merupakan kolom Produk dari variable data_intro.
+3. data_intro$Tingkat.Kepuasan merupakan kolom Tingkat.Kepuasan dari variable data_intro.
+
+Untuk menggunakan function Mode tersebut, menggunakan library tambahan bernama "pracma".
+
+###Estimasi Nilai Statistik Median
+
+Median merupakan nilai tengah dari suatu kumpulan data. median digunakan untuk data bertipe interval dan rasio.
+
+####median untuk kolom Pendapatan dari variable data_intro
+
+Untuk melihat nilai median untuk kolom `Pendapatan` pada variable data_intro, gunakan fungsi berikut:
+
+```{r}
+median(data_intro$Pendapatan) 
+```
+
+####median untuk kolom Harga dari variable data_intro
+
+Untuk melihat nilai median untuk kolom `Harga` pada variable data_intro, gunakan fungsi berikut:
+
+```{r}
+median(data_intro$Harga)
+```
+
+####median untuk kolom Jumlah dari variable data_intro
+
+Untuk melihat nilai median untuk kolom `Jumlah` dari variable data_intro, gunakan fungsi berikut:
+
+```{r}
+median(data_intro$Jumlah)
+```
+
+####median untuk kolom Total dari variable data_intro
+
+Untuk melihat nilai median untuk kolom `Total` dari variable data_intro, gunakan fungsi berikut:
+
+```{r}
+median(data_intro$Total)
+```
+
+Berikut penjelasan function diatas:
+
+1. median akan menampilkan nilai tengah pada variabel yang diamati.
+2. data_intro$Pendapatan merupakan kolom Pendapatan dari variabel data_intro.
+3. data_intro$Harga merupakan kolom Harga dari variabel data_intro.
+4. data_intro$Jumlah merupakan kolom Jumlah dari variabel data_intro.
+5. data_intro$Total merupakan kolom Total dari variabel data_intro.
+
+###Estimasi Nilai Statistik Rata-Rata (mean)
+
+Rata-rata merupakan nilai yang menunjukan nilai rata-rata aritmatik. Rata-rata/mean digunakan untuk data bertipe interval dan rasio.
+
+####mean untuk kolom Pendapatan dari variable data_intro
+
+Untuk melihat nilai mean untuk kolom `Pendapatan` pada variable data_intro, gunakan fungsi berikut:
+
+```{r}
+mean(data_intro$Pendapatan) 
+```
+
+####mean untuk kolom Harga dari variable data_intro
+
+Untuk melihat nilai mean untuk kolom `Harga` pada variable data_intro, gunakan fungsi berikut:
+
+```{r}
+mean(data_intro$Harga)
+```
+
+####mean untuk kolom Jumlah dari variable data_intro
+
+Untuk melihat nilai mean untuk kolom `Jumlah` dari variable data_intro, gunakan fungsi berikut:
+
+```{r}
+mean(data_intro$Jumlah)
+```
+
+####mean untuk kolom Total dari variable data_intro
+
+Untuk melihat nilai mean untuk kolom `Total` dari variable data_intro, gunakan fungsi berikut:
+
+```{r}
+mean(data_intro$Total)
+```
+
+Berikut penjelasan function diatas:
+
+1. mean akan menampilkan nilai rata-rata pada variabel yang diamati.
+2. data_intro$Pendapatan merupakan kolom Pendapatan dari variabel data_intro.
+3. data_intro$Harga merupakan kolom Harga dari variabel data_intro.
+4. data_intro$Jumlah merupakan kolom Jumlah dari variabel data_intro.
+5. data_intro$Total merupakan kolom Total dari variabel data_intro.
+
+###Penggunaan Mean dan Median
+
+Dari contoh praktik sebelumnya ada perbedaan hasil *Median* dan *Mean* untuk data interval dan rasio.Maka perlu diperhatikan untuk penggunaanya yaitu: penggunaan *mean* sebaiknya digunakan jika tidak ada *outlier*. Sebaliknya jika ada outlier, maka sebaiknya menggunakan *Median*.
+
+Apa itu Outlier ? Outlier adalah data yang jaraknya jauh dari keseluruhan data.
+
+##Ukuran Sebaran Data
+
+Ukuran sebaran yang sering digunakan adalah sebagai berikut:
+
+a. Range adalah selisih antara nilai terbesar dan nilai terendah.
+b. Varians adalah simpangan kuadrat data dari nilai rata-ratanya.
+
+![](E:/DQLAB/statistik7.png)
+
+c. Simpangan baku adalah simpangan data dari nilai rata-ratanya, simpangan baku nama lainnya adalah standard error. Standard error dapat digunakan untuk melihat keakuratan dari hasil estimasi, semakin kecil standard error semakin akurat hasil estimasi.
+
+![](E:/DQLAB/statistik8.png)
+
+###Estimasi Nilai Sebaran Data Range
+
+Range adalah selisih antara nilai terbesar dan nilai terendah.
+
+Misal untuk menampilkan range untuk kolom `Pendapatan` pada variabel data_intro, maka jalankan fungsi berikut:
+
+```{r}
+max(data_intro$Pendapatan)-min(data_intro$Pendapatan)
+```
+
+Berikut penjelasan function diatas:
+
+1. *max* digunakan untuk mendapatkan nilai maksimal dari data.
+2. *min* adalah function yang digunakan mendapatkan nilai minimal dari data.
+
+###Estimasi Nilai Sebaran Data Varians
+
+Varians merupakan simpangan kuadrat data dari nilai rata-ratanya. 
+
+Misal untuk menampilkan varians untuk kolom `Pendapatan` dari variabel data_intro, maka jalankan fungsi berikut:
+
+```{r}
+var(data_intro$Pendapatan)
+```
+Keterangan: e+12 menunjukkan 10 pangkat 12. Jadi nilai di atas lengkapnya adalah 1.645.684.210.526.
+
+dengan:
+*var* adalah function yang digunakan untuk mendapatkan nilai varians dari data.
+
+###Estimasi Nilai Sebaran Data Simpangan Baku
+
+Simpangan baku adalah simpangan data dari nilai rata-ratanya, simpangan baku nama lainnya adalah *standard deviasi*. Standard deviasi dapat digunakan untuk melihat keakuratan dari hasil estimasi, semakin kecil standard deviasi semakin akurat hasil estimasi.
+
+Misal untuk menampilkan nilai simpangan baku untuk kolom `Pendapatan` dari variabel data_intro, maka dapat menggunakan syntax sebagai berikut:
+
+```{r}
+sd(data_intro$Pendapatan)
+```
+
+dengan: sd adalah function yang digunakan untuk mendapatkan nilai simpangan baku dari data.
+
+##Kesimpulan
+
+Dari pembahasan materi di atas, maka kesimpulannya sebagai berikut:
+
+1. Statistik merupakan ilmu pengolahan,penyajian dan analisis data.
+2. Jenis-jenis data yaitu nominal, ordinal, interval, dan rasion.
+3. Estimasi karakteristik data yang sering digunakan diantaranya mean, median dan modus.
+4. Jenis ukuran sebaran data diantaranya range (jarak), standar deviasi, dan varians.
+
+#Analisis Data Sederhana
+
+Pada chapter 2, kita akan mempelajari 3 poin utama lainnya, yaitu:
+
+1. Analisis Deskriptif
+2. Pengenalan Uji Hipotesis
+3. Analisis Hubungan 2 Variabel
+
+##Analisis Deskriptif pada Variabel data_intro
+
+Analisis Deskriptif adalah proses analisis yang digunakan untuk membangun sebuah hipotesis.
+
+Pada bab ini, analisis deskriptif akan dilakukan pada data sebelumnya dengan tujuan untuk mendapatkan informasi berikut:
+
+1. Bagaimana profil pelanggan.
+2. Bagaimana gambaran produk.
+3. Membangun hipotesis.
+
+###Analisis Deskriptif Menggunakan Nilai Statistik
+
+Untuk melakukan analisis deskriptif setiap variabel pada R, kita dapat menggunakan function berikut.
+
+```{r}
+summary(data_intro)
+```
+
+Function summary akan menampilkan kesimpulan pada variabel masing-masing. Untuk variabel bertipe character akan menampilkan panjang datanya. Variabel bertipe factor akan menampilkan jumlah data pada masing-masing kelas. Sedangkan untuk variabel bertipe numerik akan memunculkan nilai minimum, Q1,Q2 (median), Q3, mean, dan maximum.
+
+Pengertian dari masing-masing istilah itu adalah sebagai berikut :
+
+1. Minimum adalah nilai observasi terkecil.
+2. Kuartil pertama (Q1), yang memotong 25 % dari data terendah.
+3. Median (Q2) atau nilai pertengahan.
+4. Kuartil ketiga (Q3), yang memotong 25 % dari data tertinggi.
+5. Maksimum adalah nilai observasi terbesar.
+
+###Analisis Deskriptif Menggunakan Visualisasi
+
+Setelah melakukan analisis deskriptif sebelumnya, agar lebih jelas bagaimana gambaran/sebaran dari data maka kita perlu membuat grafik dari masing-masing variabel. Grafik disini juga dapat sebagai analisis eskplorasi yang akan membantu dalam membangun hipotesis.
+
+Untuk mendapatkan visualisasi dasar dari setiap variabel pada R bisa menggunakan perintah berikut
+
+```{r}
+plot(data_intro$Jenis.Kelamin)
+hist(data_intro$Pendapatan)
+plot(data_intro$Produk)
+hist(data_intro$Harga)
+hist(data_intro$Jumlah)
+hist(data_intro$Total)
+plot(data_intro$Tingkat.Kepuasan)
+```
+
+Berikut penjelasan function diatas:
+
+*plot* digunakan untuk variabel bertipe *Factor* - function ini menghasilkan grafik Bar Plot.
+*hist* untuk variabel bertipe numerik seperti *int* - function ini menghasilkan grafik Histogram.
+
+Tujuan dari plot dan hist adalah untuk mengetahui sebaran data.
+
+####Kesimpulan Analisis Deskriptif Menggunakan Visualisasi
+
+Dari hasil analisis deskriptif pada praktek sebelumnya kita mendapatkan:
+
+a. Profil Pelanggan sebagai berikut:
+1. Sebagian besar pelanggan adalah berjenis kelamin perempuan.
+2. Rata-rata pendapatan pelanggan dalam sebulan adalah 875000 (tidak menggunakan ukuran pemusatan mean, karena pada grafik terdapat outlier. Sehingga ukuran pemusatan yang dipakai adalah median).
+3. Pelanggan sering membeli produk dalam jumlah 3-4 buah.
+4. Rata-rata total belanja yang sering dihabiskan adalah 710000.
+5. Kebanyakan pelanggan sangat puas kepada produk yang dijual.
+
+b. Gambaran produk yang dijual sebagai berikut:
+1. Produk yang sering dibeli adalah produk D.
+2. Rata-rata harga produk yang terjual sebesar 197500.
+
+Dari hasil statistik deskriptif diatas kita dapat membangun hipotesis, agar analisis data yang kita lakukan kaya informasi yang didapatkan. Pembangunan hipotesis berdasarkan intuisi kita terhadap data yang sudah kita lakukan eksplorasi.
+
+Contoh hipotesis yang dapat kita bangun berdasarkan data diatas adalah sebagai berikut:
+
+1. Apakah ada hubungan pendapatan dengan total belanja?
+2. Apakah ada pengaruh suatu produk dengan kepuasan pelanggan?
+3. Apakah ada hubungan jenis kelamin dengan total belanja?
+
+##Pengenalan Uji Hipotesis
+
+Uji hipotesis adalah metode pengambilan keputusan yang didasarkan dari analisis data. Dalam statistik dapat menguji sebuah hipotesis benar atau salah. Ada 2 jenis hipotesis yaitu hipotesis null (hipotesis nihil) dan hipotesis alternatif. *Hipotesis nihil (H0)* yaitu hipotesis yang berlawanan dengan teori yang akan dibuktikan. *Hipotesis alternatif* (Ha) adalah hipotesis yang berhubungan dengan teori yang akan dibuktikan.
+
+Dalam melakukan pengujian statistik kita perlu menggunakan metode statistik uji, yang sering digunakan yaitu z-test, t-test, chi-square test, dan f-test. Pada bab kali ini kita tidak akan membahas detail dari setiap statistik uji diatas, tetapi kita akan fokus cara menggunakannya.
+
+Selanjutnya kita harus paham mengenai *p-value* dan *alpha* yang akan digunakan dalam statistik uji.
+
+*P-value* adalah peluang terkecil dalam menolak Ho. Sedangkan alpha adalah tingkat kesalahan. Nilai alpha biasanya adalah 1%, 5%, dan 10%. Dalam prakteknya alpha 5% sering digunakan, karena lebih moderat.
+
+Hipotesis H0 ditolak jika nilai p-value kurang dari alpha (5%), sedangkan jika p-value lebih dari nilai alpha maka yang H0 diterima. Untuk lebih jelasnya dapat dilihat gambar dibawah ini
+
+![](E:/DQLAB/statistik9.png)
+
+##Perbedaan Statistik Deskriptif dan Statistik Inferensial
+
+Dalam statistik ada 2 jenis analisis data, yaitu statistik deskriptif dan statistik inferensial. Uji hipotesis, yang dijelaskan pada subbab sebelumnya termasuk kedalam statistik inferensial.
+
+Untuk membedakan antara 2 jenis analisis diatas, maka dapat menyimak penjelasan berikut:
+
+1. Statistik Deskriptif adalah statistik yang digunakan untuk analisis data dengan cara menggambarkan data sampel dengan tanpa membuat kesimpulan untuk data populasi. Beberapa hal yang dapat dilakukan adalah penyajian data melalui tabel, grafik, perhitungan modus, median, mean, perhitungan penyebaran data melalui perhitungan rata-rata dan standar deviasi. Statistik Deskriptif digunakan untuk eksplorasi data.
+
+2. Statistik Inferensial adalah yaitu statistik yang digunakan untuk menganalisis data sampel dan hasilnya diberlakukan untuk populasi. Beberapa hal yang dapat dilakukan adalah menguji hipotesis dengan statistik uji, seperti chi-square test, student-t test, f-test, z-score test.
+Statistik Inferensial dapat digunakan untuk konfirmasi dari hasil statistik deskriptif.
+
+##Tujuan Analisis Inferensial
+
+Tujuan Analisis berikutnya dari dataset kita adalah untuk mendapatkan informasi berikut:
+
+1. Bagaimana hubungan pendapatan dengan total belanja.
+2. Bagaimana pengaruh suatu produk dengan kepuasan pelanggan.
+3. Bagaimana hubungan jenis kelamin dengan total belanja.
+
+##Analisis Hubungan Antar Variabel
+
+Pada sub-bab ini, kita akan membahas cara pengujian hipotesis yang sudah kita susun diatas. Pengujian hipotesis diatas dengan menggunakan analisis inferensial. Ketiga hipotesis diatas dapat digeneralisasi sebagai hipotesis hubungan antar variabel.
+
+Dari penjelasan sebelumnya, kita akan melakukan analisis hubungan antar variabel, yaitu:
+
+1. Variabel pendapatan dengan total belanja
+2. Variabel pengaruh jenis produk dengan kepuasan pelanggan
+3. Variabel jenis kelamain dengan total belanja
+
+##Hubungan Antara Variabel Numerik
+
+Berdasarkan hasil kasus sebelumnya, kita akan melihat hubungan antara data numerik dan numerik.
+
+Ada dua cara untuk melihat hubungan antar variabel, yaitu dengan *grafik scatter plot* dan *analisis korelasi*. Grafik scatter plot untuk melihat arah hubungan, poisitif dan negatif. Sedangkan analisis korelasi adalah untuk menguji/konfirmasi apakah kedua variabel tersebut memang berhubungan dan seberapa kuat hubungannya.
+
+Rentang nilai koefisien korelasi antara -1 sampai 1. Korelasi kuat ketika mendakati -1 atau 1, sedangkan dikatakan lemah jika mendekati 0. Untuk mengetahui ada hubungan atau tidaknya menggunakan analisis korelasi, dengan hipotesis sebagai berikut
+
+a. Hipotesis nihil (null): tidak ada hubungan antara kedua variabel.
+b. Hipotesis alternatif: ada hubungan antara kedua variabel.
+
+Berikut gambaran yang lebih jelasnya.
+
+![](E:/DQLAB/statistik10.jpg)
+
+##Scatter Plot
+
+Sebelum melakukan analisis korelasi sebaiknya kita melihat hubungan dari dua variabel numerik menggunakan scatter plot. Scatter plot dapat disebut juga analisis deskriptif.
+
+Untuk melakukan scatter plot pada R menggunakan perintah plot seperti berikut.
+
+```{r}
+plot(data_intro$Pendapatan,data_intro$Total)
+```
+
+Variabel pertama yaitu *Pendapatan* akan diplot untuk sumbu x,sedangkan variabel kedua yaitu *Total* untuk sumbu y dari dataset *data_intro*
+
+##Hubungan Pendapatan dengan Total Belanja dengan cor.test
+
+Setelah melihat hubungan variabel pendapatan dengan total belanja menggunakan scatter plot diatas maka kita akan mengujinya, apakah benar-benar pendapatan memiliki pengaruh positif terhadap total belanja
+
+Untuk melakukan uji korelasi pada R menggunakan perintah
+
+```{r}
+cor.test(data_intro$Pendapatan,data_intro$Total)
+```
+
+Berikut penjelasan function diatas:
+
+a. Function cor.test digunakan untuk melihat hubungan secara statistik.
+b. Pada korelasi test untuk mengujinya kita memakai t-test. 
+
+Dengan hipotesis sebagai berikut:
+
+H0 : tidak ada hubungan antara pendapatan dan total belanja.
+
+Ha : terdapat hubungan antara pendapatan dan total belanja
+
+##Hubungan Antara Variabel Kategorik
+
+Hubungan diantara keduanya dapat dilihat dengan menggunakan tabulasi silang dan dapat juga dilihat kecenderungannya. Pada hubungan antara variabel kategorik dan kategorik tersebut tidak bisa diketahui seberapa kuat hubungan diantara keduanya dan bagaimana pengaruhnya (*positif* atau *negatif*). 
+
+Untuk mengetahui ada hubungan atau tidaknya menggunakan uji statistik *chi-square test*, dengan hipotesis sebagai berikut:
+
+* Hipotesis Null: tidak ada hubungan antara kedua variabel
+* Hipotesis Alternatif: ada hubungan antara kedua variabel
+
+##Hubungan Produk dengan Tingkat Kepuasan dengan chisq.test
+
+Berdasarkan kasus diatas kita akan melihat hubungan antara data kategorik dan kategorik, yaitu variabel jenis produk dan tingkat kepuasan. Sebelum menguji hubungannya, sebaiknya dilakukan tabulasi silang sebagai analisis deskriptif. Selanjutnya analisis inferensial, yaitu menguji apakah ada hubungan maka dapat digunakan *chi-square test*.
+
+Untuk melakukan tabulasi dan uji statistik chi-square test pada R tahapannya sebagai berikut
+
+```{r}
+table(data_intro$Produk,data_intro$Tingkat.Kepuasan)
+chisq.test(table(data_intro$Produk,data_intro$Tingkat.Kepuasan))
+```
+
+Perintah *table* untuk melihat tabulasi antar variabel kategorik, sedangkan perintah *chisq.test* digunakan untuk melihat hubungan secara statistik.
+
+Dengan hipotesis sebagai berikut :
+
+* H0 : tidak ada hubungan antara jenis produk dan tingkat kepuasan.
+* Ha : terdapat hubungan antara jenis produk dan tingkat kepuasan  
+
+##Hubungan Antara Variabel Kategorik dan Variabel Numerik
+
+Hubungan diantara keduanya dapat dilihat dengan membandingkan rata-rata pada setiap kategori. Jika nilai rata-ratanya berbeda maka kedua variabel memiliki hubungan. Pada hubungan antara variabel kategorik dan numerik tidak bisa diketahui seberapa kuat hubungan diantara keduanya dan bagimana pengaruhnya (positif atau negatif).
+
+Untuk mengetahui ada hubungan atau tidaknya menggunakan uji statistik *t-test*, dengan hipotesis sebagai berikut
+
+* Null hipotesis: tidak ada hubungan antara kedua variabel
+* Hipotesis Alternatif alternatif: ada hubungan antara kedua variabel
+
+##Hubungan Jenis Kelamin dengan Total Belanja dengan t.test
+
+Berdasarkan kasus diatas kita akan melihat hubungan antara data kategorik dan numerik, yaitu variabel jenis kelamin dan total belanja. Sebelum menguji hubungannya, sebaiknya dilihat perbedaan rata-rata total belanja untuk laki-laki dan perempuan dengan visualisasi yaitu menggunakan boxplot. Boxplot grafik statistik dari data dengan komponen lima ukuran statistik yaitu Min, Q1,Q2, Q3, dan Max. Untuk lebih jelasnya mengenai boxplot dapat dilihat gambar dibawah ini
+
+![](E:/DQLAB/statistik11.png)
+
+Selanjutnya analisis inferensial, yaitu untuk mengetahui apakah ada perbedaan rata-rata total belanja pada laki-laki dan perempuan maka digunakan statistik uji *t-test*.
+
+Untuk melakukan visualisasi boxplot dan uji statistik t-test pada R tahapannya sebagai berikut
+
+```{r}
+boxplot(Total~Jenis.Kelamin,data = data_intro)
+t.test(Total~Jenis.Kelamin,data = data_intro)
+```
+
+Function *boxplot* digunakan untuk melihat secara grafik rata-rata total belanja pada laki-laki dan perempuan, sedangkan perintah *t.test* digunakan untuk melihat hubungan secara statistik. Penggunaan kedua fungsi diatas yaitu variabel pertama yang bertipe numerik, sedangkan variabel kedua variabel kategorik. Hipotesis t-test sebagai berikut:
+
+* Hipotesis Null : tidak ada perbedaan rata-rata total belanja antara laki-laki dan perempuan.
+* Hipotesis Alternatif : ada perbedaan rata-rata total belanja antara laki-laki dan perempuan.
+
+#Kesimpulan
+
+Selamat! Dengan menyelesaikan bab kedua ini maka Anda sudah menyelesaikan course Introduction to Statictics with R yang singkat namun padat ini!
+
+Dari pembahasan materi diatas maka kesimpulannya sebagai berikut:
+
+* Sebelum memulai menganalisis data harus dilihat summary per tiap variabel.
+* Analisis Deskriptif digunakan untuk membangun sebuah hipotesis.
+* Analisis Inferensial digunakan untuk menguji hipotesis.
+
+![](E:/DQLAB/statistik12.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
